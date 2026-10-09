@@ -48,28 +48,22 @@ jobs:
           cookie_value = None
           
           for i, line in enumerate(lines):
-              # Check for MTV Digital and Hotstar user agent block
               if 'MTV Digital' in line and 'Hotstar' in line:
                   for j in range(i, min(i + 6, len(lines))):
                       if 'http-cookie=' in lines[j] or 'Cookie=' in lines[j]:
-                          match = re.search(r'(hdntl=[^\s\|"]+)', lines[j])
+                          # Yeh regex sirf hdntl aur uski value uthayega, '&User-Agent' ya aage ki cheezein chhod dega
+                          match = re.search(r'(hdntl=[^&\s\|"]+)', lines[j])
                           if match:
                               cookie_value = match.group(1)
                               break
                   if cookie_value:
                       break
           
-          # Fallback check if specific match fails
-          if not cookie_value and 'MTV Digital' in playlist_content:
-              match_all = re.search(r'hdntl=([^\s\|"]+)', playlist_content)
-              if match_all:
-                  cookie_value = match_all.group(0)
-          
           if not cookie_value:
-              print("Error: MTV Digital block mil gaya par cookie extract nahi ho payi!")
+              print("Error: Cookie extract nahi ho payi!")
               exit(0)
           
-          print(f"Extracted Cookie: {cookie_value}")
+          print(f"Cleaned Cookie: {cookie_value}")
           
           firebase_url = f"{db_url}/cookie.json?auth={secret}"
           
