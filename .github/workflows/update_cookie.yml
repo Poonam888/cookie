@@ -50,12 +50,19 @@ jobs:
           for i, line in enumerate(lines):
               if 'MTV Digital' in line and 'Hotstar' in line:
                   for j in range(i, min(i + 6, len(lines))):
-                      if 'http-cookie=' in lines[j] or 'Cookie=' in lines[j]:
-                          # Yeh regex sirf hdntl aur uski value uthayega, '&User-Agent' ya aage ki cheezein chhod dega
-                          match = re.search(r'(hdntl=[^&\s\|"]+)', lines[j])
-                          if match:
-                              cookie_value = match.group(1)
-                              break
+                      if 'hdntl=' in lines[j]:
+                          # Yeh line se sirf hdntl wali string ko split karke nikal lega
+                          parts = lines[j].split('&')
+                          for part in parts:
+                              if part.startswith('hdntl='):
+                                  cookie_value = part
+                                  break
+                          if not cookie_value:
+                              # Agar & se separated na ho toh regex use karein
+                              match = re.search(r'(hdntl=[^&\s\|"]+)', lines[j])
+                              if match:
+                                  cookie_value = match.group(1)
+                          break
                   if cookie_value:
                       break
           
