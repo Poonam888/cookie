@@ -1,4 +1,4 @@
-name: Update MTV Digital Hotstar Cookie to Firebase
+name: Update Star Vijay Fun Games Cookie to Firebase
 
 on:
   schedule:
@@ -45,42 +45,44 @@ jobs:
           
           playlist_content = response.text
           lines = playlist_content.splitlines()
-          cookie_value = None
+          raw_cookie = None
           
           for i, line in enumerate(lines):
-              # Check for MTV Digital and Hotstar user agent block
-              if 'MTV Digital' in line and 'Hotstar' in line:
-                  for j in range(i, min(i + 6, len(lines))):
-                      if 'http-cookie=' in lines[j] or 'Cookie=' in lines[j]:
+              # Check for Star Vijay Fun Games block
+              if 'Star Vijay Fun Games' in line:
+                  for j in range(i, min(i + 8, len(lines))):
+                      if 'hdntl=' in lines[j]:
                           match = re.search(r'(hdntl=[^\s\|"]+)', lines[j])
                           if match:
-                              cookie_value = match.group(1)
+                              raw_cookie = match.group(1)
                               break
-                  if cookie_value:
+                  if raw_cookie:
                       break
           
-          # Fallback check if specific match fails
-          if not cookie_value and 'MTV Digital' in playlist_content:
+          # Fallback search if specific match fails
+          if not raw_cookie and 'Star Vijay Fun Games' in playlist_content:
               match_all = re.search(r'hdntl=([^\s\|"]+)', playlist_content)
               if match_all:
-                  cookie_value = match_all.group(0)
+                  raw_cookie = match_all.group(0)
           
-          if not cookie_value:
-              print("Error: MTV Digital block mil gaya par cookie extract nahi ho payi!")
+          if not raw_cookie:
+              print("Error: Star Vijay Fun Games block mil gaya par cookie extract nahi ho payi!")
               exit(0)
           
-          # Yahan '&User-Agent' ya uske aage ka koi bhi variant ho toh use hata kar clean kar rahe hain
-          if '&User-Agent' in cookie_value:
-              cookie_value = cookie_value.split('&User-Agent')[0]
-          elif '&user-agent' in cookie_value:
-              cookie_value = cookie_value.split('&user-agent')[0]
+          # Clean cookie to remove &User-Agent or any trailing parameters
+          if '&User-Agent' in raw_cookie:
+              clean_cookie = raw_cookie.split('&User-Agent')[0]
+          elif '&user-agent' in raw_cookie:
+              clean_cookie = raw_cookie.split('&user-agent')[0]
+          else:
+              clean_cookie = raw_cookie.split('&')[0]
           
-          print(f"Cleaned Cookie to send: {cookie_value}")
+          print(f"Final Cleaned Cookie: {clean_cookie}")
           
           firebase_url = f"{db_url}/cookie.json?auth={secret}"
           
           payload = {
-              "hdntl": cookie_value
+              "hdntl": clean_cookie
           }
           
           print("Sending data to Firebase...")
