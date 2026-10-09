@@ -1,4 +1,4 @@
-Name: Update MTV Digital Hotstar Cookie to Firebase
+name: Update MTV Digital Hotstar Cookie to Firebase
 
 on:
   schedule:
