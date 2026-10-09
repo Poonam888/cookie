@@ -2,8 +2,8 @@ name: Update Star Plus Hotstar Cookie to Firebase
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Har 6 ghante me run hoga
-  workflow_dispatch: # Manual trigger ke liye
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
   update-cookie:
@@ -44,42 +44,36 @@ jobs:
               exit(1)
           
           playlist_content = response.text
-          
-          # Playlist ko lines ya blocks me split karein ya phir specific Star Plus block dhoondein
-          # Har channel block #EXTINF se shuru hota hai
           channels = playlist_content.split('#EXTINF:')
           
           cookie_value = None
           
           for channel in channels:
-              # Check karo ki block me "Star Plus" aur Hotstar ka User-Agent hai ya nahi
               if 'Star Plus' in channel and 'Hotstar' in channel:
-                  # Usi block ke andar se #EXTVLCOPT:http-cookie= wali line se cookie uthao
                   cookie_match = re.search(r'#EXTVLCOPT:http-cookie=(hdntl=[^\s\r\n]+)', channel)
                   if cookie_match:
                       cookie_value = cookie_match.group(1)
                       break
           
-          # Firebase endpoint URL
-          firebase_get_url = f"{db_url}/cookie.json?auth={secret}"
-          firebase_put_url = f"{db_url}/cookie.json?auth={secret}"
-          
           if not cookie_value:
-              print("Cookie na mile ya error aaye. Purana data blank nahi karenge.")
+              print("Cookie nahi mili ya channel match nahi hua! Purana data safe hai.")
               exit(0)
           
-          print(f"Extracted Star Plus Cookie: {cookie_value}")
+          print(f"Extracted Cookie: {cookie_value}")
+          
+          # Firebase URL with node name 'cookie'
+          firebase_url = f"{db_url}/cookie.json?auth={secret}"
           
           payload = {
               "hdntl": cookie_value
           }
           
-          print("Updating Firebase...")
-          fb_response = requests.put(firebase_put_url, json=payload)
+          print("Sending data to Firebase...")
+          fb_response = requests.put(firebase_url, json=payload)
           
-          if fb_response.status_code == 200:
-              print("Successfully updated Star Plus cookie to Firebase!")
-          else:
-              print(f"Failed to update Firebase. Response: {fb_response.text}")
+          print(f"Firebase Response Code: {fb_response.status_code}")
+          print(f"Firebase Response Body: {fb_response.text}")
+          
+          if fb_response.status_code != 200:
               exit(1)
           EOF
